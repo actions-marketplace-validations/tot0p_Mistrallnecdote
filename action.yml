@@ -1,0 +1,76 @@
+name : "Mistrallnecdote"
+description : "A Github Action to run Mistral for have a anecdote generation on a given topic"
+author : "tot0p"
+
+inputs:
+  mistral_api_key:
+    description: "The API key for Mistral"
+    required: true
+  OUTPUT_PATH:
+    description: "The path to the output file"
+    required: true
+    default: "output_image.png"
+  topics:
+    description: "A list of topics to generate anecdotes about"
+    required: true
+    default: "History, Computers, Science, Technology, Art, Music, Literature, Sports, Nature, Food, Duck"
+  model:
+    description: "The model to use for the generation"
+    required: true
+    default: "mistral-small-latest"
+  temperature:
+    description: "The temperature to use for the generation"
+    required: true
+    default: "0.7"
+  max_length:
+    description: "The maximum length of the generated text"
+    required: true
+    default: "1000"
+  language:
+    description: "The language to generate the anecdote in (e.g., 'en' for English, 'fr' for French)"
+    required: false
+    default: "en"
+
+permission:
+  contents: write
+  id-token: write
+
+runs:
+  using: "python"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install transformers torch accelerate
+
+    - name : Install Dependencies
+      run: |
+        pip install -r src/requirements.txt
+
+    - name: Run Mistral Anecdote Generation
+      run: |
+        python src/main.py
+      env:
+        TOPICS: ${{ inputs.topics }}
+        MODEL: ${{ inputs.model }}
+        TEMPERATURE: ${{ inputs.temperature }}
+        MAX_LENGTH: ${{ inputs.max_length }}
+        MISTRAL_API_KEY: ${{ inputs.mistral_api_key }}
+        OUTPUT_PATH: ${{ inputs.OUTPUT_PATH }}
+        LANGUAGE: ${{ inputs.language }}
+    - name: push result
+      if : ref == 'refs/heads/main'
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add .
+        git commit -m "Mistral Anecdote Generation 🤖"
+        git push
