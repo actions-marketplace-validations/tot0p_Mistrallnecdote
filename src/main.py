@@ -125,5 +125,8 @@ if __name__ == "__main__":
     
     response = submit_prompt_to_mistral_api(prompt)
 
+    if response is None:
+        print("Failed to get a response from Mistral API.")
+        exit(1)
     # Create an image with the text
     create_image_with_text(response, OUTPUT_PATH)
